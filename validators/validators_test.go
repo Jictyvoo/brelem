@@ -31,7 +31,7 @@ func TestValidateDetermineCPFCNPJ(t *testing.T) {
 				"298.074.850-10", "241.525.560-21", "501.585.380-72", "97949526050", "43793938018",
 			}
 			for _, cpf := range correctCPFs {
-				eType, err := ValidateDetermineCPFCNPJ(cpf)
+				eType, err := DetermineCPFCNPJ(cpf)
 				if err != nil {
 					t.Error(err)
 				}
@@ -49,7 +49,7 @@ func TestValidateDetermineCPFCNPJ(t *testing.T) {
 				"90718654000148", "73329532000140",
 			}
 			for _, cnpj := range correctCNPJs {
-				eType, err := ValidateDetermineCPFCNPJ(cnpj)
+				eType, err := DetermineCPFCNPJ(cnpj)
 				if err != nil {
 					t.Error(err)
 				}
@@ -78,7 +78,7 @@ func TestValidateDetermineCPFCNPJ_IncorrectValues(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
-		eType, resultErr := ValidateDetermineCPFCNPJ(testCase)
+		eType, resultErr := DetermineCPFCNPJ(testCase)
 		if resultErr == nil {
 			t.Errorf("It's supposed to fail in validation, but it validates the `%s` as correct", testCase)
 		}
@@ -92,6 +92,16 @@ func BenchmarkCPFCNPJ(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		for _, element := range _getValidDocuments() {
 			if err := CPFCNPJ(element); err != nil {
+				b.Error(err)
+			}
+		}
+	}
+}
+
+func BenchmarkAsyncCPFCNPJ(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		for _, element := range _getValidDocuments() {
+			if err := AsyncCPFCNPJ(element); err != nil {
 				b.Error(err)
 			}
 		}
