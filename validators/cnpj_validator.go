@@ -5,6 +5,82 @@ import "github.com/jictyvoo/brelem/utils"
 // LengthCNPJ The complete cnpj length (only numbers)
 const LengthCNPJ = 14
 
+type cnpjValidator struct {
+	verifierDigits      [2]rune
+	originalVerifier    []rune
+	subscriptionWeights [2]rune
+	branchWeights       [2]rune
+	repeatedNumber      [2]rune
+	iterations          int
+}
+
+func newCnpjValidator() *cnpjValidator {
+	return &cnpjValidator{
+		verifierDigits:      [...]rune{0, 0},
+		originalVerifier:    make([]rune, 0, 2),
+		subscriptionWeights: [...]rune{5, 6},
+		branchWeights:       [...]rune{9, 9},
+		repeatedNumber:      [...]rune{-1, 0},
+		iterations:          0,
+	}
+}
+
+func (v *cnpjValidator) iterateRune(intChar rune) {
+	if v.iterations < LengthCNPJ-2 {
+		if v.repeatedNumber[0] == -1 {
+			// getting first number
+			v.repeatedNumber[0] = intChar
+		}
+
+		if v.repeatedNumber[0] == intChar {
+			// counting number repetitions
+			v.repeatedNumber[1]++
+		}
+		if v.subscriptionWeights[0] >= 2 {
+			v.verifierDigits[0] += (intChar - '0') * v.subscriptionWeights[0]
+			v.subscriptionWeights[0]--
+		} else {
+			v.verifierDigits[0] += (intChar - '0') * v.branchWeights[0]
+			v.branchWeights[0]--
+		}
+		if v.subscriptionWeights[1] >= 2 {
+			v.verifierDigits[1] += (intChar - '0') * v.subscriptionWeights[1]
+			v.subscriptionWeights[1]--
+		} else {
+			v.verifierDigits[1] += (intChar - '0') * v.branchWeights[1]
+			v.branchWeights[1]--
+		}
+	} else {
+		v.originalVerifier = append(v.originalVerifier, intChar-'0')
+	}
+	v.iterations++
+}
+
+func (v *cnpjValidator) applyVerifierDigits() {
+	v.verifierDigits[0] = _modVerifierDigit(v.verifierDigits[0])
+	v.verifierDigits[1] += v.verifierDigits[0] * v.branchWeights[1]
+	v.verifierDigits[1] = _modVerifierDigit(v.verifierDigits[1])
+}
+
+func (v *cnpjValidator) finishValidation() (result error) {
+	v.applyVerifierDigits()
+
+	if v.HasIncorrectLength() {
+		result = utils.ErrElementIncorrectLength
+	} else if !v.HasValidDigits() {
+		result = utils.ErrInvalidElement
+	}
+	return
+}
+
+func (v *cnpjValidator) HasIncorrectLength() bool {
+	return v.repeatedNumber[1] >= LengthCNPJ-2 || v.iterations > LengthCNPJ || len(v.originalVerifier) != 2
+}
+
+func (v *cnpjValidator) HasValidDigits() bool {
+	return v.originalVerifier[0] == v.verifierDigits[0] && v.originalVerifier[1] == v.verifierDigits[1]
+}
+
 // / Check a cnpj String and returns a map containing the validation results
 func validateAsyncCNPJ(cnpjString chan rune) (result chan error) {
 	result = make(chan error, 1)
@@ -15,54 +91,13 @@ func validateAsyncCNPJ(cnpjString chan rune) (result chan error) {
 
 func ValidateCNPJ(cnpjString chan rune, result chan error) {
 	defer close(result)
-	var (
-		verifierDigits      = [...]rune{0, 0}
-		originalVerifier    = make([]rune, 0, 2)
-		subscriptionWeights = [...]rune{5, 6}
-		branchWeights       = [...]rune{9, 9}
-		repeatedNumber      = [...]rune{-1, 0}
-		iterations          = 0
-	)
+	validator := newCnpjValidator()
 
 	for intChar := range cnpjString {
-		if intChar >= '0' && intChar <= '9' {
-			if iterations < LengthCNPJ-2 {
-				if repeatedNumber[0] == -1 {
-					// getting first number
-					repeatedNumber[0] = intChar
-				}
-
-				if repeatedNumber[0] == intChar {
-					// counting number repetitions
-					repeatedNumber[1]++
-				}
-				if subscriptionWeights[0] >= 2 {
-					verifierDigits[0] += (intChar - '0') * subscriptionWeights[0]
-					subscriptionWeights[0]--
-				} else {
-					verifierDigits[0] += (intChar - '0') * branchWeights[0]
-					branchWeights[0]--
-				}
-				if subscriptionWeights[1] >= 2 {
-					verifierDigits[1] += (intChar - '0') * subscriptionWeights[1]
-					subscriptionWeights[1]--
-				} else {
-					verifierDigits[1] += (intChar - '0') * branchWeights[1]
-					branchWeights[1]--
-				}
-			} else {
-				originalVerifier = append(originalVerifier, intChar-'0')
-			}
-			iterations++
-		}
+		validator.iterateRune(intChar)
 	}
-	verifierDigits[0] = _modVerifierDigit(verifierDigits[0])
-	verifierDigits[1] += verifierDigits[0] * branchWeights[1]
-	verifierDigits[1] = _modVerifierDigit(verifierDigits[1])
 
-	if repeatedNumber[1] >= LengthCNPJ-2 || iterations > LengthCNPJ || len(originalVerifier) != 2 {
-		result <- utils.ErrElementIncorrectLength
-	} else if originalVerifier[0] != verifierDigits[0] || originalVerifier[1] != verifierDigits[1] {
-		result <- utils.ErrInvalidElement
+	if err := validator.finishValidation(); err != nil {
+		result <- err
 	}
 }
