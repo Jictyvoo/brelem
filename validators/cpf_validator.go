@@ -1,8 +1,6 @@
 package validators
 
-import (
-	"github.com/jictyvoo/brelem/utils"
-)
+import "github.com/jictyvoo/brelem/utils"
 
 // LengthCPF The CPF Length set to 11
 const LengthCPF = 11

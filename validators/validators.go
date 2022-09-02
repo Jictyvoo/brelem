@@ -9,6 +9,7 @@ func ValidateDetermineCPFCNPJ(element string) (ElementType, error) {
 	if element == "" {
 		return TypeUNKNOWN, utils.ErrEmptyString
 	}
+
 	var (
 		cpfChan  = make(chan rune, LengthCPF)
 		cnpjChan = make(chan rune, LengthCNPJ)
