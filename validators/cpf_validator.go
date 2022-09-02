@@ -71,15 +71,15 @@ func (v *cpfValidator) HasValidDigits() bool {
 	return v.originalVerifier[0] == v.verifierDigits[0] && v.originalVerifier[1] == v.verifierDigits[1]
 }
 
-// validateAsyncCPF Verify CPF string, remove non-numeric characters, calculate verifier digit
-func validateAsyncCPF(cpfString chan rune) (result chan error) {
+// AsyncCPF Verify CPF string, remove non-numeric characters, calculate verifier digit
+func AsyncCPF(cpfString chan rune) (result chan error) {
 	result = make(chan error, 1)
-	go ValidateCPF(cpfString, result)
+	go ChannelCheckCPF(cpfString, result)
 
 	return
 }
 
-func ValidateCPF(cpfString chan rune, result chan error) {
+func ChannelCheckCPF(cpfString chan rune, result chan error) {
 	defer close(result)
 	validator := newCpfValidator()
 

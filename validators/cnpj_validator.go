@@ -14,8 +14,8 @@ type cnpjValidator struct {
 	iterations          int
 }
 
-func newCnpjValidator() *cnpjValidator {
-	return &cnpjValidator{
+func newCnpjValidator() cnpjValidator {
+	return cnpjValidator{
 		verifierDigits:      [...]rune{0, 0},
 		originalVerifier:    make([]rune, 0, 2),
 		subscriptionWeights: [...]rune{5, 6},
@@ -81,15 +81,15 @@ func (v *cnpjValidator) HasValidDigits() bool {
 	return v.originalVerifier[0] == v.verifierDigits[0] && v.originalVerifier[1] == v.verifierDigits[1]
 }
 
-// / Check a cnpj String and returns a map containing the validation results
-func validateAsyncCNPJ(cnpjString chan rune) (result chan error) {
+// AsyncCNPJ Check a cnpj String and returns a map containing the validation results
+func AsyncCNPJ(cnpjString chan rune) (result chan error) {
 	result = make(chan error, 1)
-	go ValidateCNPJ(cnpjString, result)
+	go ChannelCheckCNPJ(cnpjString, result)
 
 	return
 }
 
-func ValidateCNPJ(cnpjString chan rune, result chan error) {
+func ChannelCheckCNPJ(cnpjString chan rune, result chan error) {
 	defer close(result)
 	validator := newCnpjValidator()
 
