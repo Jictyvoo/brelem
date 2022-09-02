@@ -1,11 +1,37 @@
 package validators
 
-import (
-	"errors"
-	"github.com/jictyvoo/brelem/utils"
-)
+import "github.com/jictyvoo/brelem/utils"
 
-func ValidateDetermineCPFCNPJ(element string) (ElementType, error) {
+func DetermineCPFCNPJ(element string) (ElementType, error) {
+	if element == "" {
+		return TypeUNKNOWN, utils.ErrEmptyString
+	}
+
+	var (
+		cpfVld  = newCpfValidator()
+		cnpjVld = newCnpjValidator()
+	)
+
+	for _, value := range element {
+		if value >= '0' && value <= '9' {
+			cpfVld.iterateRune(value)
+			cnpjVld.iterateRune(value)
+		}
+	}
+
+	// Check if the result channels close or has an error
+	cpfErr, cnpjErr := cpfVld.finishValidation(), cnpjVld.finishValidation()
+	if cpfErr != nil && cnpjErr != nil {
+		return TypeUNKNOWN, ErrValidateCPFCNPJ
+	}
+
+	if cpfErr == nil {
+		return TypeCPF, nil
+	}
+	return TypeCNPJ, nil
+}
+
+func AsyncDetermineCPFCNPJ(element string) (ElementType, error) {
 	if element == "" {
 		return TypeUNKNOWN, utils.ErrEmptyString
 	}
@@ -15,8 +41,8 @@ func ValidateDetermineCPFCNPJ(element string) (ElementType, error) {
 		cnpjChan = make(chan rune, LengthCNPJ)
 	)
 
-	cpfResult := validateAsyncCPF(cpfChan)
-	cnpjResult := validateAsyncCNPJ(cnpjChan)
+	cpfResult := AsyncCPF(cpfChan)
+	cnpjResult := AsyncCNPJ(cnpjChan)
 
 	for _, value := range element {
 		if value >= '0' && value <= '9' {
@@ -30,10 +56,9 @@ func ValidateDetermineCPFCNPJ(element string) (ElementType, error) {
 	}
 
 	// Check if the result channels close or has an error
-
 	cpfErr, cnpjErr := <-cpfResult, <-cnpjResult
 	if cpfErr != nil && cnpjErr != nil {
-		return TypeUNKNOWN, errors.New("given value isn't a valid CPF/CNPJ")
+		return TypeUNKNOWN, ErrValidateCPFCNPJ
 	}
 
 	if cpfErr == nil {
@@ -43,6 +68,11 @@ func ValidateDetermineCPFCNPJ(element string) (ElementType, error) {
 }
 
 func CPFCNPJ(element string) error {
-	_, err := ValidateDetermineCPFCNPJ(element)
+	_, err := DetermineCPFCNPJ(element)
+	return err
+}
+
+func AsyncCPFCNPJ(element string) error {
+	_, err := AsyncDetermineCPFCNPJ(element)
 	return err
 }
