@@ -15,27 +15,29 @@ func CNH(element string) (result error) {
 	)
 
 	for _, character := range element {
-		actualNumber := character - '0'
-		if iterations < LengthCPF-2 {
-			{
-				verifierDigits[0] += (actualNumber) * weights[0]
-				verifierDigits[1] += (actualNumber) * weights[1]
-				weights[1]++
-				weights[0]--
-			}
+		if character >= '0' && character <= '9' {
+			actualNumber := character - '0'
+			if iterations < LengthCPF-2 {
+				{
+					verifierDigits[0] += (actualNumber) * weights[0]
+					verifierDigits[1] += (actualNumber) * weights[1]
+					weights[1]++
+					weights[0]--
+				}
 
-			if repeatedNumber[0] == -1 {
-				// getting first number
-				repeatedNumber[0] = character
+				if repeatedNumber[0] == -1 {
+					// getting first number
+					repeatedNumber[0] = character
+				}
+				if repeatedNumber[0] == character {
+					// counting number repetitions
+					repeatedNumber[1]++
+				}
+			} else {
+				originalVerifier = append(originalVerifier, actualNumber)
 			}
-			if repeatedNumber[0] == character {
-				// counting number repetitions
-				repeatedNumber[1]++
-			}
-		} else {
-			originalVerifier = append(originalVerifier, actualNumber)
+			iterations++
 		}
-		iterations++
 	}
 
 	// start checking the digits
@@ -51,12 +53,14 @@ func CNH(element string) (result error) {
 		verifierDigits[1] -= 2
 	}
 
-	hasIncorrectLength := repeatedNumber[1] >= LengthCNH-2 || iterations > LengthCNH || len(originalVerifier) != 2
-	hasValidDigits := originalVerifier[0] == verifierDigits[0] && originalVerifier[1] == verifierDigits[1]
-	if hasIncorrectLength {
+	hasCorrectLength := repeatedNumber[1] < LengthCNH-2 && iterations <= LengthCNH && len(originalVerifier) == 2
+	if hasCorrectLength {
+		hasCorrectDigits := originalVerifier[0] == verifierDigits[0] && originalVerifier[1] == verifierDigits[1]
+		if !hasCorrectDigits {
+			result = utils.ErrInvalidElement
+		}
+	} else {
 		result = utils.ErrElementIncorrectLength
-	} else if !hasValidDigits {
-		result = utils.ErrInvalidElement
 	}
 
 	return
