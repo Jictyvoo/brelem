@@ -15,8 +15,8 @@ func CPF(element string) (result error) {
 	)
 
 	for _, character := range element {
-		actualNumber := character - '0'
 		if character >= '0' && character <= '9' {
+			actualNumber := character - '0'
 			if iterations < LengthCPF-2 {
 				{
 					verifierDigits[0] += actualNumber * weights[0]
