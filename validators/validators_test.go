@@ -96,13 +96,3 @@ func BenchmarkCPFCNPJ(b *testing.B) {
 		}
 	}
 }
-
-func BenchmarkAsyncCPFCNPJ(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		for _, element := range _getValidDocuments() {
-			if err := AsyncCPFCNPJ(element); err != nil {
-				b.Error(err)
-			}
-		}
-	}
-}
