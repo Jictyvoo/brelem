@@ -5,6 +5,39 @@ import (
 	"time"
 )
 
+func TestTimezoneBRT(t *testing.T) {
+	testBRTLocation, err := time.LoadLocation(LocationName)
+	if err != nil {
+		t.Error("Failed to load the BRT location")
+		t.FailNow()
+	}
+
+	const timeDifference = 3 * time.Hour
+
+	timezoneFactory := func(location *time.Location) time.Time {
+		return time.Date(2022, time.September, 1, 19, 11, 46, 0, location)
+	}
+
+	utc0Time := timezoneFactory(time.UTC).Add(timeDifference)
+	brtTime := timezoneFactory(testBRTLocation)
+	if !BatchConvertToBRT(&utc0Time, &brtTime) {
+		t.Error("An error occurred during timezone conversion")
+	}
+
+	controlTime := timezoneFactory(testBRTLocation)
+	utcControlTime := timezoneFactory(time.UTC).Add(timeDifference)
+	for _, toCheck := range [...]time.Time{utc0Time, brtTime} {
+		if !controlTime.Equal(toCheck) {
+			t.Errorf("Time collision with time: `%v`", toCheck)
+		}
+
+		actualDifference := utcControlTime.Sub(toCheck)
+		if actualDifference != 0 {
+			t.Errorf("The given time difference was not 0s\nReceived: `%v`", actualDifference)
+		}
+	}
+}
+
 func TestFormat(t *testing.T) {
 	testCases := [...]struct {
 		timeElem time.Time
