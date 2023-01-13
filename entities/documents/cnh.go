@@ -1,9 +1,9 @@
 package documents
 
 import (
-	"github.com/jictyvoo/brelem/utils"
-	"github.com/jictyvoo/brelem/validators"
 	"time"
+
+	"github.com/jictyvoo/brelem/validators"
 )
 
 type (
@@ -26,7 +26,7 @@ const (
 
 func (c CNH) Validate() error {
 	if c.ExpiresAt.Before(time.Now()) {
-		return utils.ErrExpiredDocument
+		return ErrExpiredDocument
 	}
 	return validators.CNH(c.Number)
 }

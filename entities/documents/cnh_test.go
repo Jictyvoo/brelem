@@ -1,13 +1,14 @@
 package documents
 
 import (
-	"github.com/jictyvoo/brelem/validators"
 	"testing"
 	"time"
+
+	"github.com/jictyvoo/brelem/validators"
 )
 
 func TestCNH_Validate(t *testing.T) {
-	var documentList = [...]CNH{
+	documentList := [...]CNH{
 		{
 			Number: "30231030596", ExpiresAt: time.Date(2001, 3, 20, 0, 0, 0, 0, time.UTC),
 			FirstLicenseDate: time.Date(1986, 6, 20, 0, 0, 0, 0, time.UTC), Type: DriverTypeD,

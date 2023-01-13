@@ -1,7 +1,5 @@
 package validators
 
-import "github.com/jictyvoo/brelem/utils"
-
 // LengthCNH The CNH Length set to 11
 const LengthCNH = 11
 
@@ -17,7 +15,7 @@ func CNH(element string) (result error) {
 	for _, character := range element {
 		if character >= '0' && character <= '9' {
 			actualNumber := character - '0'
-			if iterations < LengthCPF-2 {
+			if iterations < LengthCNH-2 {
 				{
 					verifierDigits[0] += (actualNumber) * weights[0]
 					verifierDigits[1] += (actualNumber) * weights[1]
@@ -57,10 +55,10 @@ func CNH(element string) (result error) {
 	if hasCorrectLength {
 		hasCorrectDigits := originalVerifier[0] == verifierDigits[0] && originalVerifier[1] == verifierDigits[1]
 		if !hasCorrectDigits {
-			result = utils.ErrInvalidElement
+			result = ErrInvalidElement
 		}
 	} else {
-		result = utils.ErrElementIncorrectLength
+		result = ErrElementIncorrectLength
 	}
 
 	return

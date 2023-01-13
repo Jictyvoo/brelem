@@ -1,7 +1,5 @@
 package validators
 
-import "github.com/jictyvoo/brelem/utils"
-
 // LengthCNPJ The complete cnpj length (only numbers)
 const LengthCNPJ = 14
 
@@ -63,10 +61,10 @@ func CNPJ(element string) (result error) {
 	if hasCorrectLength {
 		hasCorrectDigits := originalVerifier[0] == verifierDigits[0] && originalVerifier[1] == verifierDigits[1]
 		if !hasCorrectDigits {
-			result = utils.ErrInvalidElement
+			result = ErrInvalidElement
 		}
 	} else {
-		result = utils.ErrElementIncorrectLength
+		result = ErrElementIncorrectLength
 	}
 
 	return

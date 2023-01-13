@@ -1,10 +1,8 @@
 package validators
 
-import "github.com/jictyvoo/brelem/utils"
-
 func DetermineCPFCNPJ(element string) (ElementType, error) {
 	if element == "" {
-		return TypeUNKNOWN, utils.ErrEmptyString
+		return TypeUNKNOWN, ErrEmptyString
 	}
 
 	// Check if the result channels close or has an error
