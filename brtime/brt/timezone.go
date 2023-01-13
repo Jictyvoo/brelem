@@ -4,6 +4,12 @@ import "time"
 
 const LocationName = "America/Sao_Paulo"
 
+const (
+	DateFormat     = "02/01/2006"
+	TimeFormat     = "15:04:05"
+	DateTimeFormat = DateFormat + " - " + TimeFormat
+)
+
 // BatchConvertToBRT receives a list of addresses and sets the timezone to BRT-0 (which is UTC-3) in every element
 func BatchConvertToBRT(timestamps ...*time.Time) bool {
 	if utc3Timezone, err := time.LoadLocation(LocationName); err == nil {
@@ -26,7 +32,7 @@ func AsBRT(timestamp time.Time) time.Time {
 func Format(element time.Time) string {
 	// Check if it has hour/minute/second
 	if element.Hour() > 0 || element.Minute() > 0 || element.Second() > 0 {
-		return element.Format("02/01/2006 - 15:04:05")
+		return element.Format(DateTimeFormat)
 	}
-	return element.Format("02/01/2006")
+	return element.Format(DateFormat)
 }
