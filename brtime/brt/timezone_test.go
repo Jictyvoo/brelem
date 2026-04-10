@@ -51,7 +51,11 @@ func TestFormat(t *testing.T) {
 
 	for _, tCase := range testCases {
 		if result := Format(tCase.timeElem); result != tCase.expected {
-			t.Errorf("Formatted time is not the expected\nExpected: `%s`\nReceived: `%s`", tCase.expected, result)
+			t.Errorf(
+				"Formatted time is not the expected\nExpected: `%s`\nReceived: `%s`",
+				tCase.expected,
+				result,
+			)
 		}
 	}
 }
