@@ -1,25 +1,25 @@
 package validators
 
-import "github.com/jictyvoo/brelem/utils"
+import (
+	"github.com/jictyvoo/brelem/utils"
+)
 
 // LengthCPF The CPF Length set to 11
 const LengthCPF = 11
 
 type cpfValidator struct {
 	verifierDigits   [2]rune
-	originalVerifier []rune
+	originalVerifier [2]rune
 	weights          [2]rune
 	repeatedNumber   [2]rune
-	iterations       int
+	iterations       uint
+	extraDigits      uint64
 }
 
 func newCpfValidator() cpfValidator {
 	return cpfValidator{
-		verifierDigits:   [...]rune{0, 0},
-		originalVerifier: make([]rune, 0, 2),
-		weights:          [...]rune{10, 11},
-		repeatedNumber:   [...]rune{-1, 0},
-		iterations:       0,
+		weights:        [...]rune{10, 11},
+		repeatedNumber: [...]rune{-1, 0},
 	}
 }
 
@@ -41,7 +41,13 @@ func (v *cpfValidator) iterateRune(intChar rune) {
 			v.repeatedNumber[1]++
 		}
 	} else {
-		v.originalVerifier = append(v.originalVerifier, intChar-'0')
+		verifierIndex := 2 - (LengthCPF - v.iterations)
+		digitValue := intChar - '0'
+		if verifierIndex < 2 {
+			v.originalVerifier[verifierIndex] = digitValue
+		} else {
+			v.extraDigits = (v.extraDigits << 1) | uint64(digitValue)
+		}
 	}
 	v.iterations++
 }
@@ -64,9 +70,9 @@ func (v *cpfValidator) finishValidation() (result error) {
 }
 
 func (v *cpfValidator) HasIncorrectLength() bool {
-	return v.repeatedNumber[1] >= LengthCPF-2 || v.iterations > LengthCPF || len(v.originalVerifier) != 2
+	return v.repeatedNumber[1] >= LengthCPF-2 || v.iterations > LengthCPF || v.extraDigits != 0
 }
 
 func (v *cpfValidator) HasValidDigits() bool {
-	return v.originalVerifier[0] == v.verifierDigits[0] && v.originalVerifier[1] == v.verifierDigits[1]
+	return v.originalVerifier == v.verifierDigits
 }

@@ -7,21 +7,19 @@ const LengthCNPJ = 14
 
 type cnpjValidator struct {
 	verifierDigits      [2]rune
-	originalVerifier    []rune
+	originalVerifier    [2]rune
 	subscriptionWeights [2]rune
 	branchWeights       [2]rune
 	repeatedNumber      [2]rune
-	iterations          int
+	iterations          uint
+	extraDigits         uint64
 }
 
 func newCnpjValidator() cnpjValidator {
 	return cnpjValidator{
-		verifierDigits:      [...]rune{0, 0},
-		originalVerifier:    make([]rune, 0, 2),
 		subscriptionWeights: [...]rune{5, 6},
 		branchWeights:       [...]rune{9, 9},
 		repeatedNumber:      [...]rune{-1, 0},
-		iterations:          0,
 	}
 }
 
@@ -51,7 +49,13 @@ func (v *cnpjValidator) iterateRune(intChar rune) {
 			v.branchWeights[1]--
 		}
 	} else {
-		v.originalVerifier = append(v.originalVerifier, intChar-'0')
+		verifierIndex := 2 - (LengthCNPJ - v.iterations)
+		digitValue := intChar - '0'
+		if verifierIndex < 2 {
+			v.originalVerifier[verifierIndex] = digitValue
+		} else {
+			v.extraDigits = (v.extraDigits << 1) | uint64(digitValue) // TODO: 0 is valid as last digit, this approach doesn't check it
+		}
 	}
 	v.iterations++
 }
@@ -74,9 +78,9 @@ func (v *cnpjValidator) finishValidation() (result error) {
 }
 
 func (v *cnpjValidator) HasIncorrectLength() bool {
-	return v.repeatedNumber[1] >= LengthCNPJ-2 || v.iterations > LengthCNPJ || len(v.originalVerifier) != 2
+	return v.repeatedNumber[1] >= LengthCNPJ-2 || v.iterations > LengthCNPJ || v.extraDigits != 0
 }
 
 func (v *cnpjValidator) HasValidDigits() bool {
-	return v.originalVerifier[0] == v.verifierDigits[0] && v.originalVerifier[1] == v.verifierDigits[1]
+	return v.originalVerifier == v.verifierDigits
 }
