@@ -70,23 +70,3 @@ func (v *cpfValidator) HasIncorrectLength() bool {
 func (v *cpfValidator) HasValidDigits() bool {
 	return v.originalVerifier[0] == v.verifierDigits[0] && v.originalVerifier[1] == v.verifierDigits[1]
 }
-
-// AsyncCPF Verify CPF string, remove non-numeric characters, calculate verifier digit
-func AsyncCPF(cpfString chan rune) (result chan error) {
-	result = make(chan error, 1)
-	go ChannelCheckCPF(cpfString, result)
-
-	return
-}
-
-func ChannelCheckCPF(cpfString chan rune, result chan error) {
-	defer close(result)
-	validator := newCpfValidator()
-
-	for intChar := range cpfString {
-		validator.iterateRune(intChar)
-	}
-	if err := validator.finishValidation(); err != nil {
-		result <- err
-	}
-}

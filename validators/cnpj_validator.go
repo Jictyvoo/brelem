@@ -80,24 +80,3 @@ func (v *cnpjValidator) HasIncorrectLength() bool {
 func (v *cnpjValidator) HasValidDigits() bool {
 	return v.originalVerifier[0] == v.verifierDigits[0] && v.originalVerifier[1] == v.verifierDigits[1]
 }
-
-// AsyncCNPJ Check a cnpj String and returns a map containing the validation results
-func AsyncCNPJ(cnpjString chan rune) (result chan error) {
-	result = make(chan error, 1)
-	go ChannelCheckCNPJ(cnpjString, result)
-
-	return
-}
-
-func ChannelCheckCNPJ(cnpjString chan rune, result chan error) {
-	defer close(result)
-	validator := newCnpjValidator()
-
-	for intChar := range cnpjString {
-		validator.iterateRune(intChar)
-	}
-
-	if err := validator.finishValidation(); err != nil {
-		result <- err
-	}
-}
